@@ -1,4 +1,5 @@
 import { Logo } from "../logo";
+import { NavLink } from "../nav-link";
 
 export const NavBar = () => {
   return (
@@ -6,12 +7,10 @@ export const NavBar = () => {
       <Logo />
 
       <nav className="flex gap-5">
-        <a href="/events" className="font-medium text-sm text-zinc-300">
-          Eventos
-        </a>
-        <a href="/attendees" className="font-medium text-sm">
+        <NavLink href="/events">Eventos</NavLink>
+        <NavLink href="/attendees" className="font-medium text-sm">
           Participantes
-        </a>
+        </NavLink>
       </nav>
     </div>
   );

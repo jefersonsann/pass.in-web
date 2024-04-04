@@ -1,3 +1,6 @@
+import dayjs from "dayjs";
+import "dayjs/locale/pt-br";
+import relativeTime from "dayjs/plugin/relativeTime";
 import {
   ChevronLeft,
   ChevronRight,
@@ -6,8 +9,46 @@ import {
   MoreHorizontal,
   Search,
 } from "lucide-react";
+import { ChangeEvent, useState } from "react";
+import { attendees } from "../data/attendees";
+import { IconButton } from "./icon-button";
+import { Table } from "./table";
+import { TableCell } from "./table/table-cell";
+import { TableHeader } from "./table/table-header";
+import { TableRow } from "./table/table-row";
+
+dayjs.extend(relativeTime);
+dayjs.locale("pt-br");
 
 export const AttendeeList = () => {
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+
+  const totalPages = Math.ceil(attendees.length / 10);
+
+  function onSearchInputChanged(event: ChangeEvent<HTMLInputElement>) {
+    setSearch(event.target.value);
+  }
+
+  class Pagination {
+    FirstPage() {
+      setPage(1);
+    }
+    PreviusPage() {
+      if (page <= 1) return setPage(1);
+      setPage(page - 1);
+    }
+    NextPage() {
+      if (page >= totalPages) return setPage(totalPages);
+      setPage(page + 1);
+    }
+    LastPage() {
+      setPage(totalPages);
+    }
+  }
+
+  const goTo = new Pagination();
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-5">
@@ -15,121 +56,113 @@ export const AttendeeList = () => {
         <div className="w-72 px-3 py-1.5 border border-white/10 rounded-lg text-sm flex items-center">
           <Search className="w-4 text-emerald-300" />
           <input
+            onChange={onSearchInputChanged}
             className="bg-transparent flex-1 px-3 outline-none border-0 p-0 text-sm ring-0"
             placeholder="Buscar participantes"
           />
         </div>
+        {search}
       </div>
 
-      <div className="border border-white/10 rounded-lg">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-white/10">
-              <th className="py-3 px-4 text-sm font-semibold text-left">
-                <input
-                  type="checkbox"
-                  className="size-4 bg-black/20 border border-white/10 rounded"
-                />
-              </th>
-              <th className="py-3 px-4 text-sm font-semibold text-left">
-                Código
-              </th>
-              <th className="py-3 px-4 text-sm font-semibold text-left">
-                Participante
-              </th>
-              <th className="py-3 px-4 text-sm font-semibold text-left">
-                Data da inscrição
-              </th>
-              <th className="py-3 px-4 text-sm font-semibold text-left">
-                Data do check-in
-              </th>
-              <th className="py-3 px-4 text-sm font-semibold text-left"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {Array.from({ length: 10 }).map((_, index) => {
+      <Table>
+        <thead>
+          <tr className="border-b border-white/10">
+            <TableHeader>
+              <input
+                type="checkbox"
+                className="size-4 bg-black/20 border border-white/10 rounded"
+              />
+            </TableHeader>
+            <TableHeader>Código</TableHeader>
+            <TableHeader>Participante</TableHeader>
+            <TableHeader>Data da inscrição</TableHeader>
+            <TableHeader>Data do check-in</TableHeader>
+            <TableHeader></TableHeader>
+          </tr>
+        </thead>
+        <tbody>
+          {attendees
+            .slice((page - 1) * 10, page * 10)
+            .map(({ id, name, email, createdAt, checkedInAt }) => {
               return (
-                <tr
+                <TableRow
                   className="border-b border-white/10 hover:bg-white/5"
-                  key={index}
+                  key={id}
                 >
-                  <td
-                    style={{ width: "48px" }}
-                    className="py-3 px-4 text-zinc-300 text-sm text-left"
-                  >
+                  <TableCell style={{ width: "48px" }}>
                     <input
                       type="checkbox"
                       className="size-4 bg-transparent border border-white/10 rounded"
                     />
-                  </td>
-                  <td className="py-3 px-4 text-zinc-300 text-sm text-left">
-                    123456789
-                  </td>
-                  <td className="py-3 px-4 text-zinc-300 text-sm text-left">
+                  </TableCell>
+                  <TableCell>{id}</TableCell>
+                  <TableCell>
                     <div className="flex flex-col gap-1">
-                      <span className="font-semibold text-white">
-                        Jeferson Santos
-                      </span>
-                      <span>me@jefersonsann.com</span>
+                      <span className="font-semibold text-white">{name}</span>
+                      <span>{email.toLowerCase()}</span>
                     </div>
-                  </td>
-                  <td className="py-3 px-4 text-zinc-300 text-sm text-left">
-                    7 dias atrás
-                  </td>
-                  <td className="py-3 px-4 text-zinc-300 text-sm text-left">
-                    3 dias atrás
-                  </td>
-                  <td
-                    style={{ width: "64px" }}
-                    className="py-3 px-4 text-zinc-300 text-sm text-left"
-                  >
-                    <button className="bg-black/20 border border-white/10 rounded-md p-1.5">
+                  </TableCell>
+                  <TableCell>{dayjs().to(createdAt)}</TableCell>
+                  <TableCell>{dayjs().to(checkedInAt)}</TableCell>
+                  <TableCell style={{ width: "64px" }}>
+                    <IconButton transparent>
                       <MoreHorizontal className="size-4" />
-                    </button>
-                  </td>
-                </tr>
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
               );
             })}
-          </tbody>
-          <tfoot>
-            <tr>
-              <td
-                className="py-3 px-4 text-zinc-300 text-sm text-left"
-                colSpan={3}
-              >
-                {" "}
-                Mostrando 10 de 228 itens
-              </td>
-              <td
-                className="py-3 px-4 text-zinc-300 text-sm text-right"
-                colSpan={3}
-              >
-                <div className="inline-flex items-center gap-8">
-                  <span>Pagina 1 de 28</span>
+        </tbody>
+        <tfoot>
+          <tr>
+            <TableCell colSpan={3}>
+              {" "}
+              Mostrando 10 de {attendees.length} itens
+            </TableCell>
+            <TableCell className="text-right" colSpan={3}>
+              <div className="inline-flex items-center gap-8">
+                <span>
+                  Pagina {page} de {totalPages}
+                </span>
 
-                  <div className="flex gap-1.5">
-                    <button className="bg-black/20 border border-white/10 rounded-md p-1.5">
-                      <ChevronsLeft className="size-4" />
-                    </button>
+                <div className="flex gap-1.5">
+                  <IconButton
+                    onClick={goTo.FirstPage}
+                    transparent={page === 1}
+                    disabled={page === 1}
+                  >
+                    <ChevronsLeft className="size-4" />
+                  </IconButton>
 
-                    <button className="bg-black/20 border border-white/10 rounded-md p-1.5">
-                      <ChevronLeft className="size-4" />
-                    </button>
+                  <IconButton
+                    onClick={goTo.PreviusPage}
+                    transparent={page === 1}
+                    disabled={page === 1}
+                  >
+                    <ChevronLeft className="size-4" />
+                  </IconButton>
 
-                    <button className="bg-white/10 border border-white/10 rounded-md p-1.5">
-                      <ChevronRight className="size-4" />
-                    </button>
+                  <IconButton
+                    onClick={goTo.NextPage}
+                    transparent={page === totalPages}
+                    disabled={page === totalPages}
+                  >
+                    <ChevronRight className="size-4" />
+                  </IconButton>
 
-                    <button className="bg-white/10 border border-white/10 rounded-md p-1.5">
-                      <ChevronsRight className="size-4" />
-                    </button>
-                  </div>
+                  <IconButton
+                    onClick={goTo.LastPage}
+                    transparent={page === totalPages}
+                    disabled={page === totalPages}
+                  >
+                    <ChevronsRight className="size-4" />
+                  </IconButton>
                 </div>
-              </td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
+              </div>
+            </TableCell>
+          </tr>
+        </tfoot>
+      </Table>
     </div>
   );
 };
