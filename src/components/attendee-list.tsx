@@ -9,8 +9,8 @@ import {
   MoreHorizontal,
   Search,
 } from "lucide-react";
-import { ChangeEvent, useState } from "react";
-import { attendees } from "../data/attendees";
+import { ChangeEvent, useEffect, useState } from "react";
+import { UserProps } from "../@types/user-props";
 import { IconButton } from "./icon-button";
 import { Table } from "./table";
 import { TableCell } from "./table/table-cell";
@@ -23,8 +23,15 @@ dayjs.locale("pt-br");
 export const AttendeeList = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [attendees, setAttendees] = useState<UserProps[]>([]);
 
   const totalPages = Math.ceil(attendees.length / 10);
+
+  useEffect(() => {
+    fetch("http://localhost:3333/users")
+      .then((response) => response.json())
+      .then((data) => setAttendees(data));
+  }, [page]);
 
   function onSearchInputChanged(event: ChangeEvent<HTMLInputElement>) {
     setSearch(event.target.value);
@@ -81,37 +88,46 @@ export const AttendeeList = () => {
           </tr>
         </thead>
         <tbody>
-          {attendees
-            .slice((page - 1) * 10, page * 10)
-            .map(({ id, name, email, createdAt, checkedInAt }) => {
-              return (
-                <TableRow
-                  className="border-b border-white/10 hover:bg-white/5"
-                  key={id}
+          {attendees.map(({ id, name, email, createdAt, checkedInAt }) => {
+            return (
+              <TableRow
+                className="border-b border-white/10 hover:bg-white/5"
+                key={id}
+              >
+                <TableCell style={{ width: "48px" }}>
+                  <input
+                    type="checkbox"
+                    className="size-4 bg-transparent border border-white/10 rounded"
+                  />
+                </TableCell>
+                <TableCell
+                  style={{ width: "50px" }}
+                  className="text-nowrap overflow-hidden text-ellipsis"
                 >
-                  <TableCell style={{ width: "48px" }}>
-                    <input
-                      type="checkbox"
-                      className="size-4 bg-transparent border border-white/10 rounded"
-                    />
-                  </TableCell>
-                  <TableCell>{id}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
-                      <span className="font-semibold text-white">{name}</span>
-                      <span>{email.toLowerCase()}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>{dayjs().to(createdAt)}</TableCell>
-                  <TableCell>{dayjs().to(checkedInAt)}</TableCell>
-                  <TableCell style={{ width: "64px" }}>
-                    <IconButton transparent>
-                      <MoreHorizontal className="size-4" />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+                  {id}
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-col gap-1">
+                    <span className="font-semibold text-white">{name}</span>
+                    <span className="lowercase">{email}</span>
+                  </div>
+                </TableCell>
+                <TableCell>{dayjs().to(createdAt)}</TableCell>
+                <TableCell>
+                  {checkedInAt ? (
+                    dayjs().to(checkedInAt)
+                  ) : (
+                    <span className="opacity-40">Ainda não fez check-in</span>
+                  )}
+                </TableCell>
+                <TableCell style={{ width: "64px" }}>
+                  <IconButton transparent>
+                    <MoreHorizontal className="size-4" />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </tbody>
         <tfoot>
           <tr>

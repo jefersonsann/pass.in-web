@@ -1,4 +1,5 @@
 import React, { ComponentProps } from "react";
+import { twMerge } from "tailwind-merge";
 
 interface NavLinkPorps extends ComponentProps<"a"> {
   children: React.ReactNode;
@@ -6,7 +7,10 @@ interface NavLinkPorps extends ComponentProps<"a"> {
 
 export const NavLink = (props: NavLinkPorps) => {
   return (
-    <a className="font-medium text-sm text-zinc-300" {...props}>
+    <a
+      {...props}
+      className={twMerge("font-medium text-sm text-zinc-300", props.className)}
+    >
       {props.children}
     </a>
   );
