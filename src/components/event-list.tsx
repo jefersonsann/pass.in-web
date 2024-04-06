@@ -10,7 +10,7 @@ import {
   Search,
 } from "lucide-react";
 import { ChangeEvent, useEffect, useState } from "react";
-import { UserProps } from "../@types/user-props";
+import { EventProps } from "../@types/event-props";
 import { IconButton } from "./icon-button";
 import { Table } from "./table";
 import { TableCell } from "./table/table-cell";
@@ -20,7 +20,7 @@ import { TableRow } from "./table/table-row";
 dayjs.extend(relativeTime);
 dayjs.locale("pt-br");
 
-export const AttendeeList = () => {
+export const EventList = () => {
   const [search, setSearch] = useState(() => {
     const url = new URL(window.location.toString());
     if (url.searchParams.has("search")) {
@@ -38,7 +38,7 @@ export const AttendeeList = () => {
 
     return 1;
   });
-  const [attendees, setAttendees] = useState<UserProps[]>([]);
+  const [events, setEvents] = useState<EventProps[]>([]);
   const [total, setTotal] = useState(0);
 
   const totalPages = Math.ceil(total / 10);
@@ -87,9 +87,7 @@ export const AttendeeList = () => {
     new Functions();
 
   useEffect(() => {
-    const url = new URL(
-      "http://localhost:3333/events/9e9bd979-9d10-4915-b339-3786b1634f33/attendees"
-    );
+    const url = new URL("http://localhost:3333/events");
 
     if (search.length > 0) {
       url.searchParams.set("query", search);
@@ -99,8 +97,8 @@ export const AttendeeList = () => {
 
     fetch(url)
       .then((response) => response.json())
-      .then(({ attendees, total }) => {
-        setAttendees(attendees);
+      .then(({ events, total }) => {
+        setEvents(events);
         setTotal(total);
       });
   }, [page, search]);
@@ -108,14 +106,14 @@ export const AttendeeList = () => {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-5">
-        <h1 className="text-2xl font-bold">Participantes</h1>
+        <h1 className="text-2xl font-bold">Eventos</h1>
         <div className="w-72 px-3 py-1.5 border border-white/10 rounded-lg text-sm flex items-center">
           <Search className="w-4 text-emerald-300" />
           <input
             onChange={onSearchInputChanged}
             value={search}
             className="bg-transparent flex-1 px-3 outline-none border-0 p-0 text-sm focus:ring-0"
-            placeholder="Buscar participantes"
+            placeholder="Buscar evento"
           />
         </div>
       </div>
@@ -129,60 +127,72 @@ export const AttendeeList = () => {
                 className="size-4 bg-black/20 border border-white/10 rounded"
               />
             </TableHeader>
-            <TableHeader>Código</TableHeader>
-            <TableHeader>Participante</TableHeader>
-            <TableHeader>Data da inscrição</TableHeader>
-            <TableHeader>Data do check-in</TableHeader>
+            <TableHeader>ID</TableHeader>
+            <TableHeader>Nome</TableHeader>
+            <TableHeader>Detalhes</TableHeader>
+            <TableHeader>Inscritos</TableHeader>
+            <TableHeader>Lançado</TableHeader>
             <TableHeader></TableHeader>
           </tr>
         </thead>
         <tbody>
-          {attendees.map(({ id, name, email, createdAt, checkedInAt }) => {
-            return (
-              <TableRow
-                className="border-b border-white/10 hover:bg-white/5"
-                key={id}
-              >
-                <TableCell style={{ width: "48px" }}>
-                  <input
-                    type="checkbox"
-                    className="size-4 bg-transparent border border-white/10 rounded"
-                  />
-                </TableCell>
-                <TableCell
-                  style={{ width: "50px" }}
-                  className="text-nowrap overflow-hidden text-ellipsis"
+          {events.map(
+            ({
+              id,
+              title,
+              slug,
+              details,
+              attendeesAmout,
+              maximumAttendees,
+              createdAt,
+            }) => {
+              return (
+                <TableRow
+                  className="border-b border-white/10 hover:bg-white/5"
+                  key={id}
                 >
-                  {id}
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-col gap-1">
-                    <span className="font-semibold text-white">{name}</span>
-                    <span className="lowercase">{email}</span>
-                  </div>
-                </TableCell>
-                <TableCell>{dayjs().to(createdAt)}</TableCell>
-                <TableCell>
-                  {checkedInAt ? (
-                    dayjs().to(checkedInAt)
-                  ) : (
-                    <span className="opacity-40">Ainda não fez check-in</span>
-                  )}
-                </TableCell>
-                <TableCell style={{ width: "64px" }}>
-                  <IconButton transparent>
-                    <MoreHorizontal className="size-4" />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            );
-          })}
+                  <TableCell style={{ width: "48px" }}>
+                    <input
+                      type="checkbox"
+                      className="size-4 bg-transparent border border-white/10 rounded"
+                    />
+                  </TableCell>
+                  <TableCell
+                    style={{ width: "50px" }}
+                    className="text-nowrap overflow-hidden text-ellipsis"
+                  >
+                    {id}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      <span className="font-semibold text-white">{title}</span>
+                      <span className="lowercase">{slug}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>{details}</TableCell>
+                  <TableCell>
+                    {
+                      <span>
+                        {attendeesAmout} de {maximumAttendees}
+                      </span>
+                    }
+                  </TableCell>
+                  <TableCell>{dayjs().to(createdAt)}</TableCell>
+                  <TableCell style={{ width: "64px" }}>
+                    <IconButton transparent>
+                      <MoreHorizontal className="size-4" />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              );
+            }
+          )}
         </tbody>
         <tfoot>
           <tr>
             <TableCell colSpan={3}>
               {" "}
-              Mostrando {attendees.length} de {total} itens
+              Mostrando {events.length} de {total} itens
             </TableCell>
             <TableCell className="text-right" colSpan={3}>
               <div className="inline-flex items-center gap-8">
